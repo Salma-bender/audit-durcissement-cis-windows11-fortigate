@@ -1,0 +1,244 @@
+\chapter{Élaboration des guides et des checklists d'audit des actifs de sécurité}
+\label{chap:guides}
+
+\section{Introduction}
+
+Après avoir présenté le contexte, la problématique et les objectifs du projet, ce chapitre est consacré aux actifs étudiés ainsi qu'à l'élaboration des guides et des checklists d'audit qui serviront de référence pour l'évaluation de leur niveau de sécurité.
+
+L'étude porte sur deux actifs critiques d'un système d'information : le poste de travail Windows 11 et le pare-feu FortiGate. Les guides et les checklists ont été élaborés en s'appuyant sur les exigences de la loi n°05-20, des directives de la DGSSI, de la DNSSI et des CIS Benchmarks, afin de garantir une approche conforme aux bonnes pratiques et aux exigences réglementaires.
+
+Ce chapitre présente tout d'abord les actifs étudiés, puis les principaux référentiels de sécurité retenus. Il décrit ensuite la méthodologie adoptée pour élaborer les guides et les checklists d'audit, qui constituent la base des opérations d'audit et de durcissement présentées dans le chapitre suivant.
+
+\section{Présentation des actifs étudiés}
+
+\subsection{Windows 11}
+
+\minihead{Présentation}
+Windows 11 est le système d'exploitation développé par Microsoft et lancé officiellement en octobre 2021. Il constitue la dernière génération des systèmes Windows destinés aux postes de travail et est largement adopté par les entreprises grâce à ses performances, son interface modernisée et ses fonctionnalités avancées de sécurité. Dans un environnement bancaire, il est utilisé sur les postes des collaborateurs afin d'assurer l'exécution des applications métiers, la gestion des données et l'accès sécurisé aux ressources du système d'information.
+
+\minihead{Rôle dans le système d'information}
+Le poste de travail Windows 11 représente l'un des principaux points d'accès au système d'information de l'entreprise. Les utilisateurs s'y authentifient pour accéder aux applications internes, aux services réseau et aux ressources partagées. En raison de son exposition aux attaques telles que les logiciels malveillants, le phishing ou les accès non autorisés, il constitue un actif critique nécessitant une configuration de sécurité conforme aux bonnes pratiques et aux exigences réglementaires.
+
+\minihead{Fonctionnalités de sécurité natives}
+Windows 11 intègre plusieurs fonctionnalités de sécurité natives permettant de protéger les données et les utilisateurs :
+\begin{itemize}
+  \item chiffrement des disques avec BitLocker ;
+  \item antivirus Microsoft Defender ;
+  \item pare-feu Windows Defender Firewall ;
+  \item contrôle des applications ;
+  \item gestion des mises à jour via Windows Update ;
+  \item authentification biométrique avec Windows Hello ;
+  \item journalisation des événements de sécurité.
+\end{itemize}
+Ces fonctionnalités constituent la base des opérations d'audit et de durcissement réalisées dans ce projet.
+
+\subsection{Pare-feu FortiGate}
+
+\minihead{Présentation}
+FortiGate est un pare-feu nouvelle génération (\emph{Next Generation Firewall}, NGFW) développé par Fortinet. Il assure la protection périmétrique du système d'information en contrôlant les flux réseau entrants et sortants. Grâce à ses nombreuses fonctionnalités de sécurité, il est largement utilisé dans les organisations et particulièrement dans le secteur bancaire, où la protection des infrastructures réseau constitue un enjeu majeur.
+
+\minihead{Rôle dans la sécurité périmétrique}
+Le pare-feu FortiGate constitue la première ligne de défense entre le réseau interne de l'entreprise et les réseaux externes, notamment Internet. Il permet :
+\begin{itemize}
+  \item de filtrer le trafic réseau ;
+  \item d'appliquer les politiques de sécurité ;
+  \item de contrôler les accès entre les différentes zones réseau ;
+  \item de détecter et bloquer les attaques ;
+  \item de sécuriser les connexions VPN ;
+  \item de centraliser les journaux de sécurité.
+\end{itemize}
+Son rôle est essentiel pour assurer la disponibilité, l'intégrité et la confidentialité des communications.
+
+\Needspace{10\baselineskip}
+\minihead{Architecture}
+L'architecture d'un pare-feu FortiGate (figure~\ref{fig:forti-arch}) est généralement composée des éléments suivants :
+\Needspace{9\baselineskip}
+\begin{multicols}{2}
+\begin{itemize}
+  \item interface WAN ;
+  \item interface LAN ;
+  \item moteur de filtrage ;
+  \item moteur IPS (\emph{Intrusion Prevention System}) ;
+  \item antivirus ;
+  \item contrôle applicatif ;
+  \item filtrage Web ;
+  \item VPN IPsec et SSL ;
+  \item journalisation et supervision.
+\end{itemize}
+\end{multicols}
+Ces composants travaillent conjointement afin d'assurer une protection complète du réseau.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig01.jpeg}{0.7}{}
+\caption{Architecture générale d'un pare-feu FortiGate}
+\label{fig:forti-arch}
+\end{figure}
+
+\minihead{Fonctionnalités principales}
+FortiGate offre de nombreuses fonctionnalités de sécurité, notamment :
+\Needspace{9\baselineskip}
+\begin{multicols}{2}
+\begin{itemize}
+  \item pare-feu nouvelle génération (NGFW) ;
+  \item système de prévention des intrusions (IPS) ;
+  \item antivirus ;
+  \item filtrage Web ;
+  \item contrôle des applications ;
+  \item inspection SSL ;
+  \item VPN IPsec et SSL VPN ;
+  \item authentification des utilisateurs ;
+  \item journalisation et génération de rapports ;
+  \item haute disponibilité (HA).
+\end{itemize}
+\end{multicols}
+Ces fonctionnalités permettent de répondre aux exigences de sécurité des infrastructures critiques et servent de base aux opérations d'audit et de durcissement présentées dans le chapitre suivant.
+
+\section{Présentation des référentiels de sécurité}
+
+Afin de garantir une démarche d'audit conforme aux bonnes pratiques et aux exigences réglementaires, plusieurs référentiels de sécurité ont été retenus. Ces référentiels constituent la base de l'élaboration des guides et des checklists d'audit utilisés pour évaluer la sécurité des actifs étudiés.
+
+\subsection{Loi n°05-20}
+
+La loi n°05-20 relative à la cybersécurité établit le cadre juridique marocain visant à renforcer la protection des systèmes d'information des administrations publiques, des organismes sensibles et des opérateurs d'importance vitale. Elle définit les principes généraux de gouvernance de la cybersécurité, les obligations en matière de protection des systèmes d'information ainsi que les exigences liées à la gestion des risques et des incidents de sécurité. Dans le cadre de ce projet, cette loi constitue une référence réglementaire pour l'identification des exigences de sécurité applicables aux actifs étudiés.
+
+\subsection{Direction Générale de la Sécurité des Systèmes d'Information (DGSSI)}
+
+La Direction Générale de la Sécurité des Systèmes d'Information (DGSSI) est l'autorité nationale chargée de la cybersécurité au Maroc. Elle élabore des politiques, des guides et des recommandations destinés à améliorer le niveau de sécurité des systèmes d'information des organismes publics et privés. Les guides publiés par la DGSSI ont servi de référence pour sélectionner plusieurs mesures de sécurité intégrées aux guides et aux checklists d'audit élaborés dans ce projet.
+
+\subsection{Directive Nationale de la Sécurité des Systèmes d'Information (DNSSI)}
+
+La Directive Nationale de la Sécurité des Systèmes d'Information (DNSSI) définit les exigences minimales de sécurité que les organismes concernés doivent appliquer afin d'assurer la protection de leurs systèmes d'information. Elle couvre notamment la gouvernance de la sécurité, la gestion des accès, la protection des infrastructures, la gestion des vulnérabilités et la journalisation. Les recommandations de la DNSSI ont été utilisées pour compléter les contrôles de conformité appliqués aux actifs étudiés.
+
+\subsection{CIS Benchmarks}
+
+Les CIS Benchmarks, publiés par le Center for Internet Security (CIS), constituent un ensemble de recommandations internationales destinées au durcissement des systèmes d'exploitation, des équipements réseau et des applications. Ils proposent des paramètres de configuration permettant de réduire la surface d'attaque et de renforcer la sécurité des actifs informatiques. Dans ce projet, les CIS Benchmarks relatifs à Windows 11 et au pare-feu FortiGate ont constitué la principale référence technique pour l'élaboration des guides, des checklists d'audit et des mesures de durcissement.
+
+\section{Méthodologie d'élaboration des guides}
+
+L'élaboration des guides d'audit et des checklists de conformité a suivi une démarche structurée en plusieurs étapes :
+
+\begin{enumerate}
+  \item \textbf{Analyse des référentiels} : étude approfondie des exigences issues de la loi n°05-20, des guides de la DGSSI, de la DNSSI et des CIS Benchmarks ;
+  \item \textbf{Sélection des exigences} : identification des contrôles pertinents au regard du contexte bancaire et de l'environnement technique du laboratoire ;
+  \item \textbf{Comparaison des exigences} : mise en correspondance des recommandations issues des différents référentiels afin d'éviter les redondances et d'identifier les éventuels écarts ;
+  \item \textbf{Regroupement par domaine} : classification des contrôles retenus par domaine fonctionnel (authentification, chiffrement, journalisation, réseau, etc.) ;
+  \item \textbf{Élaboration des guides} : rédaction des guides détaillant chaque contrôle, sa justification ainsi que la configuration recommandée ;
+  \item \textbf{Élaboration des checklists} : synthèse des guides sous forme de checklists exploitables lors des opérations d'audit.
+\end{enumerate}
+
+\section{Guide d'audit Windows 11}
+
+\subsection{Objectif du guide}
+
+Dans le cadre de ce projet, un guide d'audit de sécurité a été élaboré afin de disposer d'un document de référence permettant d'évaluer la conformité de la configuration du système d'exploitation Windows 11. Ce guide constitue une base méthodologique pour les opérations d'audit et de durcissement en regroupant les principaux contrôles de sécurité applicables au poste de travail.
+
+Son élaboration repose principalement sur les recommandations des CIS Benchmarks Windows 11 Enterprise et du guide de durcissement de la DNSSI. Les exigences de la loi n°05-20 ainsi que les orientations de la DGSSI ont également été prises en compte afin d'assurer la conformité avec le cadre réglementaire marocain.
+
+\subsection{Structure du guide}
+
+Le guide est structuré autour de plusieurs domaines de sécurité couvrant les principaux paramètres de configuration de Windows 11. Parmi les domaines étudiés figurent notamment :
+\Needspace{9\baselineskip}
+\begin{multicols}{2}
+\begin{itemize}
+  \item gestion des comptes et authentification ;
+  \item politique des mots de passe ;
+  \item stratégies de sécurité locales ;
+  \item droits des utilisateurs ;
+  \item Microsoft Defender Antivirus ;
+  \item pare-feu Microsoft Defender ;
+  \item chiffrement BitLocker ;
+  \item journalisation et audit ;
+  \item services Windows ;
+  \item configuration réseau ;
+  \item paramètres système.
+\end{itemize}
+\end{multicols}
+Pour chaque contrôle, le guide précise la référence du contrôle, la configuration recommandée, le niveau de sévérité ainsi que le référentiel utilisé. La figure~\ref{fig:guide-win} présente un extrait du guide d'audit de Windows 11.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig02.png}{0.95}{}
+\caption{Extrait du guide d'audit de Windows 11}
+\label{fig:guide-win}
+\end{figure}
+
+\section{Guide d'audit FortiGate}
+
+\subsection{Objectif du guide}
+
+Afin d'évaluer la sécurité de la configuration du pare-feu FortiGate, un guide d'audit spécifique a été élaboré. Ce document rassemble les principaux contrôles permettant de vérifier la conformité des paramètres de sécurité et de préparer les opérations de durcissement.
+
+Le guide est principalement basé sur le CIS Benchmark FortiGate 7.0.x ainsi que sur le guide de durcissement de la DNSSI. Les exigences de la loi n°05-20 et les recommandations de la DGSSI ont également été prises en considération afin d'assurer la conformité avec les exigences nationales.
+
+\subsection{Structure du guide}
+
+Le guide est organisé selon les principaux domaines de configuration du pare-feu, notamment :
+\Needspace{9\baselineskip}
+\begin{multicols}{2}
+\begin{itemize}
+  \item gestion des comptes administrateurs ;
+  \item authentification et contrôle d'accès ;
+  \item configuration des interfaces ;
+  \item politiques de sécurité (\emph{firewall policies}) ;
+  \item services réseau ;
+  \item VPN ;
+  \item journalisation et supervision ;
+  \item sauvegarde et restauration de la configuration ;
+  \item administration sécurisée.
+\end{itemize}
+\end{multicols}
+Pour chaque contrôle, le guide indique la configuration recommandée, le niveau de sévérité, les risques associés ainsi que le référentiel de sécurité correspondant. La figure~\ref{fig:guide-forti} présente un extrait de ce guide.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig03.png}{0.95}{}
+\caption{Extrait du guide d'audit du pare-feu FortiGate}
+\label{fig:guide-forti}
+\end{figure}
+
+\section{Élaboration des checklists d'audit}
+
+\subsection{Objectif des checklists}
+
+À partir des guides d'audit élaborés pour Windows 11 et le pare-feu FortiGate, des checklists d'audit ont été développées afin de faciliter les opérations de vérification de la conformité des configurations de sécurité. Ces checklists constituent un outil pratique permettant de contrôler de manière systématique chaque exigence de sécurité et de consigner les résultats de l'audit.
+
+Chaque contrôle est associé à un statut permettant d'indiquer s'il est conforme, non conforme ou non applicable, ce qui facilite l'identification des écarts de configuration ainsi que le suivi des actions correctives.
+
+\subsection{Structure des checklists}
+
+Chaque checklist reprend, sous une forme condensée, l'ensemble des contrôles détaillés dans le guide d'audit correspondant. Elle se présente sous la forme d'un tableau structuré autour de deux colonnes principales : la description du contrôle à vérifier et le statut de conformité observé, ce dernier étant décliné en trois modalités : \emph{Conforme}, \emph{Non conforme} et \emph{Non applicable (N/A)}.
+
+Cette structure uniforme, reprise pour chaque actif étudié, permet de faciliter la lecture des résultats d'audit, d'homogénéiser la démarche de vérification entre les différents actifs et de simplifier la consolidation des écarts de conformité en vue de la définition des actions de durcissement.
+
+\subsection{Utilisation des checklists}
+
+Les checklists ont été utilisées tout au long des opérations d'audit afin d'évaluer le niveau de conformité des actifs étudiés. Elles ont permis d'identifier les paramètres de configuration non conformes aux recommandations des référentiels de sécurité et de préparer les opérations de durcissement présentées dans le chapitre suivant.
+
+Les résultats obtenus à l'aide de ces checklists constituent la base de l'analyse des écarts de sécurité et des recommandations formulées dans ce projet.
+
+\subsection{Checklist Windows 11}
+
+La figure~\ref{fig:check-win} présente un extrait de la checklist d'audit élaborée pour le poste de travail Windows 11.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig04.png}{0.85}{}
+\caption{Extrait de la checklist d'audit Windows 11}
+\label{fig:check-win}
+\end{figure}
+
+\subsection{Checklist du pare-feu FortiGate}
+
+La figure~\ref{fig:check-forti} présente un extrait de la checklist d'audit élaborée pour le pare-feu FortiGate.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig05.png}{0.95}{}
+\caption{Extrait de la checklist d'audit FortiGate}
+\label{fig:check-forti}
+\end{figure}
+
+\section{Conclusion}
+
+Ce chapitre a présenté les deux actifs étudiés, le poste de travail Windows 11 et le pare-feu FortiGate, ainsi que la méthodologie suivie pour élaborer leurs guides et checklists d'audit, à partir des référentiels retenus (loi n°05-20, DGSSI, DNSSI, CIS Benchmarks). Après analyse et sélection des exigences pertinentes regroupées par domaine, des guides détaillant chaque contrôle ont été rédigés, puis synthétisés en checklists (Conforme, Non conforme, N/A) servant de base aux opérations d'audit et de durcissement présentées dans le chapitre suivant.

@@ -1,0 +1,531 @@
+\chapter{Mise en œuvre du durcissement et validation des résultats}
+\label{chap:durcissement}
+
+\section{Introduction}
+
+Ce chapitre présente la mise en œuvre des opérations d'audit, de durcissement et de validation des deux actifs étudiés, à savoir le poste de travail Windows 11 et le pare-feu FortiGate. Après une présentation de l'environnement de test, les différentes étapes réalisées pour chaque actif sont décrites, depuis l'évaluation de l'état initial jusqu'à la validation des mesures de sécurité mises en œuvre. Les résultats obtenus sont ensuite analysés afin d'évaluer l'efficacité des actions de durcissement et leur contribution au renforcement du niveau de sécurité.
+
+\section{Présentation de l'environnement de test}
+
+Les opérations d'audit, de durcissement et de validation ont été réalisées dans un environnement virtualisé sous VMware Workstation 17 Pro. Cet environnement a permis de déployer les différentes machines virtuelles nécessaires à la mise en œuvre des tests de sécurité et des opérations de durcissement. Les principales caractéristiques de l'environnement sont présentées dans le tableau~\ref{tab:env}.
+
+\begin{table}[htbp]
+\centering
+\caption{Environnement de test}
+\label{tab:env}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}p{5.4cm} L@{}}
+\toprule
+\hdrow \hd{Élément} & \hd{Description} \\
+\midrule
+Machine hôte & Windows 10 Enterprise, version 22H2 (Build 19045.6456) \\
+Plateforme de virtualisation & VMware Workstation 17 Pro \\
+Machine virtuelle cible & Windows 11 \\
+Machine virtuelle d'attaque & Kali Linux \\
+Équipement de sécurité & Pare-feu FortiGate VM \\
+Outils de test & Hydra, Nmap \\
+Outils de durcissement & Scripts PowerShell, stratégies de sécurité Windows, interface d'administration FortiGate \\
+Validation & Rapports HTML générés avant et après le durcissement \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Durcissement du poste Windows 11}
+
+\subsection{Audit initial}
+
+Avant la mise en œuvre des mesures de durcissement, un audit de sécurité a été réalisé sur le poste Windows 11 afin d'évaluer son niveau de conformité par rapport aux recommandations du CIS Microsoft Windows 11 Benchmark ainsi qu'aux exigences du référentiel de la Direction Générale de la Sécurité des Systèmes d'Information (DGSSI). Cette étape a permis d'identifier les écarts de configuration et les vulnérabilités susceptibles d'affecter la sécurité du système.
+
+La figure~\ref{fig:win-before-dash} présente le tableau de bord du rapport HTML généré avant l'application des mesures de durcissement.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig06.png}{1}{}
+\caption{Tableau de bord du rapport d'audit avant le durcissement du poste Windows 11}
+\label{fig:win-before-dash}
+\end{figure}
+
+L'analyse du tableau de bord montre que 40 paramètres de sécurité ont été évalués. Parmi ceux-ci, 10 sont conformes, 20 sont non conformes et 10 nécessitent une vérification manuelle, ce qui correspond à un taux de conformité initial de 25\,\%. Ce résultat met en évidence plusieurs insuffisances de configuration qui nécessitent la mise en œuvre de mesures de durcissement.
+
+Afin d'identifier précisément les paramètres concernés, le rapport fournit également le détail des contrôles évalués, comme illustré par la figure~\ref{fig:win-before-detail}.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig07.jpeg}{1}{}
+\caption{Résultats détaillés de l'audit CIS du poste de travail Windows 11 avant durcissement}
+\label{fig:win-before-detail}
+\end{figure}
+
+\minihead{Analyse des résultats}
+L'analyse détaillée des résultats montre que plusieurs catégories de paramètres présentent des non-conformités susceptibles d'affecter la sécurité du poste Windows 11. Les principales concernent la gestion des services système, les mécanismes d'audit, le contrôle des applications (AppLocker), la gestion des comptes, les protections avancées (VBS et HVCI), le chiffrement des données avec BitLocker, ainsi que certains paramètres de protection réseau et de confidentialité.
+
+À l'inverse, plusieurs contrôles essentiels sont déjà conformes, notamment la désactivation du compte Invité, l'activation du pare-feu Windows sur l'ensemble des profils, la désactivation de SMBv1 et la protection en temps réel de Microsoft Defender.
+
+Par ailleurs, certains contrôles sont classés en \og Vérification manuelle \fg{}, car leur validation dépend d'une infrastructure externe telle qu'Active Directory, une solution IAM, MDM ou PKI. Ces paramètres n'ont pas pu être évalués dans le cadre de l'environnement de test utilisé.
+
+Globalement, l'audit met en évidence un taux de conformité initial de 25\,\%, révélant un niveau de sécurité insuffisant au regard des recommandations du CIS Benchmark et de la DGSSI. Ces résultats justifient la mise en œuvre des opérations de durcissement présentées dans les sections suivantes.
+
+\subsection{Simulation d'une attaque par force brute sur RDP}
+
+Afin d'évaluer le niveau de résistance initial du poste Windows 11 face aux tentatives d'authentification répétées, une simulation d'attaque par force brute sur le protocole Remote Desktop Protocol (RDP) a été réalisée dans l'environnement de laboratoire.
+
+L'objectif de cette simulation est de vérifier si un attaquant disposant d'un accès au réseau peut tenter plusieurs combinaisons d'identifiants afin d'obtenir un accès au service RDP. Cette étape est réalisée avant l'application des mesures de durcissement afin d'établir un état initial de sécurité.
+
+La machine Kali Linux a été utilisée comme machine source de l'attaque, tandis que le poste Windows 11 constitue la machine cible. Le service RDP est accessible sur le port TCP 3389.
+
+\Needspace{9\baselineskip}
+\minihead{Préparation de l'attaque}
+Une liste de mots de passe de test a été préparée dans la machine Kali Linux. La tentative d'authentification a ensuite été réalisée à l'aide de l'outil Hydra, spécialisé dans les tests de résistance des mécanismes d'authentification. La commande utilisée dans le laboratoire est la suivante :
+
+\begin{lstlisting}[language=bash]
+hydra -l audit -P passwords.txt rdp://192.168.100.136
+\end{lstlisting}
+
+où :
+\begin{itemize}
+  \item \texttt{-l audit} désigne le compte utilisateur utilisé pour le test ;
+  \item \texttt{-P passwords.txt} indique la liste de mots de passe de test ;
+  \item \texttt{rdp://192.168.100.136} désigne le service RDP de la machine Windows 11 cible.
+\end{itemize}
+Cette opération a été réalisée exclusivement dans l'environnement de laboratoire mis en place pour l'audit.
+
+\minihead{Déroulement de la simulation}
+Lors de l'exécution de la commande, Hydra tente successivement les différents mots de passe présents dans la liste de test. L'outil indique notamment que le service RDP est accessible sur le port TCP 3389 (figures~\ref{fig:hydra-launch} et~\ref{fig:hydra-result}).
+
+\begin{figure}[htbp]
+\centering
+\fig{fig08.jpeg}{0.6}{}
+\caption{Lancement de la simulation de force brute RDP depuis Kali Linux}
+\label{fig:hydra-launch}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\fig{fig09.jpeg}{1}{}
+\caption{Résultat de la simulation d'attaque RDP avec Hydra}
+\label{fig:hydra-result}
+\end{figure}
+
+\Needspace{9\baselineskip}
+\minihead{Résultats obtenus}
+La simulation a permis d'identifier les identifiants utilisés pour le compte de test. Hydra indique notamment :
+
+\begin{lstlisting}
+[3389][rdp] host: 192.168.100.136
+login: audit   password: ********
+\end{lstlisting}
+
+Le résultat montre que le mécanisme d'authentification RDP accepte les identifiants testés. Cette situation met en évidence le risque associé à l'utilisation d'un mot de passe faible ou présent dans une liste de mots de passe connue.
+
+Il convient toutefois de préciser que cette simulation ne constitue pas à elle seule une preuve de compromission complète du poste. Elle démontre principalement la possibilité de réaliser des tentatives d'authentification répétées contre le service RDP lorsque celui-ci est accessible.
+
+\minihead{Analyse de sécurité}
+Le résultat obtenu avant durcissement constitue l'état de référence (\emph{baseline}) utilisé pour évaluer l'efficacité des mesures de sécurité appliquées par la suite. Plusieurs mesures de durcissement peuvent être mises en œuvre afin de réduire ce risque, notamment :
+\begin{itemize}
+  \item l'utilisation de mots de passe robustes ;
+  \item la limitation des comptes autorisés à utiliser RDP ;
+  \item l'activation de mécanismes de protection contre les tentatives d'authentification répétées ;
+  \item la restriction de l'accès au service RDP aux réseaux ou adresses IP autorisés ;
+  \item l'activation de mécanismes de journalisation et de surveillance des connexions RDP ;
+  \item la désactivation de RDP lorsque ce service n'est pas nécessaire.
+\end{itemize}
+Cette étape permet ainsi d'établir une comparaison avant/après durcissement. Une nouvelle vérification est effectuée après l'application des mesures de sécurité afin de déterminer si le risque identifié lors de l'audit initial a été réduit.
+
+\subsection{Mise en œuvre du durcissement}
+
+Le durcissement a été réalisé selon deux approches complémentaires : des mesures appliquées automatiquement par un script PowerShell et des mesures nécessitant une intervention manuelle.
+
+\minihead{Exécution du script de durcissement}
+Le script PowerShell de durcissement a été exécuté avec des privilèges administrateur sur le poste Windows 11. Il permet d'appliquer les paramètres de sécurité définis et d'indiquer l'état de chaque contrôle après son traitement. Les résultats sont présentés sous différents états, notamment \texttt{[APPLIQUÉ]} lorsque la mesure a été correctement appliquée, \texttt{[DÉJÀ OK]} lorsque le paramètre était déjà conforme et \texttt{[MANUEL]} lorsqu'une intervention supplémentaire est nécessaire (figure~\ref{fig:win-script}).
+
+\begin{figure}[htbp]
+\centering
+\fig{fig10.png}{0.95}{}
+\caption{Exécution du script de durcissement du poste Windows 11}
+\label{fig:win-script}
+\end{figure}
+
+\minihead{Mesures appliquées automatiquement}
+Le script PowerShell a permis d'appliquer plusieurs paramètres de sécurité, notamment :
+\begin{itemize}
+  \item une longueur minimale de mot de passe de 14 caractères ;
+  \item un seuil de verrouillage du compte après 5 tentatives échouées ;
+  \item la suppression des privilèges système non nécessaires ;
+  \item la restriction du chargement et du déchargement des pilotes aux administrateurs ;
+  \item la désactivation du compte Invité ;
+  \item le verrouillage automatique du poste après 900 secondes d'inactivité.
+\end{itemize}
+
+\minihead{Mesures appliquées manuellement}
+Certaines recommandations ont été configurées manuellement afin de compléter le travail du script. Les principales mesures sont :
+\begin{itemize}
+  \item augmentation de la taille maximale du journal de sécurité ;
+  \item configuration d'AppLocker et de ses règles par défaut ;
+  \item configuration du service AppIDSvc ;
+  \item renommage du compte Administrateur local ;
+  \item activation de l'audit des validations d'informations d'identification, pour les succès et les échecs ;
+  \item activation de la sécurité basée sur la virtualisation (VBS) ;
+  \item activation de HVCI à travers l'intégrité de la mémoire ;
+  \item revue des comptes utilisateurs et de leurs privilèges.
+\end{itemize}
+Le contrôle relatif aux heures de connexion dépend d'un environnement Active Directory ou Entra ID. Il a donc été considéré comme non applicable dans l'environnement Windows 11 autonome utilisé pour les tests. Le tableau~\ref{tab:mesures-win} synthétise les principales mesures de durcissement.
+
+\begin{table}[htbp]
+\centering
+\caption{Synthèse des principales mesures de durcissement}
+\label{tab:mesures-win}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}p{4.2cm} L p{2.4cm}@{}}
+\toprule
+\hdrow \hd{Domaine} & \hd{Mesure} & \hd{Application} \\
+\midrule
+Authentification & Mot de passe minimal de 14 caractères et verrouillage après 5 échecs & Automatique \\
+Privilèges & Restriction des privilèges et des pilotes & Automatique \\
+Session & Verrouillage après 900 secondes d'inactivité & Automatique \\
+Journalisation & Augmentation de la taille du journal Security et audit des identifications & Manuel \\
+Contrôle applicatif & Configuration d'AppLocker & Manuel \\
+Comptes & Renommage de l'Administrateur et revue des comptes & Manuel \\
+Protection système & Activation de VBS et HVCI & Manuel \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Résultats après durcissement}
+
+Après l'application des mesures de durcissement automatiques et manuelles, un nouvel audit de sécurité a été réalisé sur le poste Windows 11. L'objectif de cette étape est de vérifier l'évolution du niveau de conformité par rapport à l'état initial.
+
+Le rapport généré après durcissement évalue 40 paramètres de sécurité selon les recommandations du CIS Microsoft Windows 11 Benchmark et du référentiel DNSSI. Les résultats obtenus sont les suivants :
+\begin{itemize}
+  \item 26 paramètres sont conformes ;
+  \item 4 paramètres restent non conformes ;
+  \item 10 paramètres nécessitent une vérification manuelle ;
+  \item le taux global de conformité atteint 85\,\%.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\fig{fig11.png}{1}{}
+\caption{Rapport d'état de sécurité après durcissement de Windows 11}
+\label{fig:win-after-dash}
+\end{figure}
+
+Les résultats montrent une amélioration significative de la configuration de sécurité du poste. Plusieurs paramètres initialement non conformes ont été corrigés grâce aux mesures automatisées et aux configurations manuelles.
+
+\minihead{Détail des contrôles après durcissement}
+Afin de compléter la synthèse précédente, le détail des 40 contrôles évalués est présenté dans la figure~\ref{fig:win-after-detail}. Cette vue permet d'identifier précisément les paramètres conformes, les paramètres non conformes ainsi que ceux nécessitant une vérification manuelle.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig12.jpeg}{1}{}
+\caption{Détail des contrôles de sécurité après durcissement}
+\label{fig:win-after-detail}
+\end{figure}
+
+Le tableau montre notamment que plusieurs mesures relatives aux politiques de comptes, aux droits utilisateurs, aux services système, au pare-feu Windows et à la protection réseau sont désormais conformes. Les paramètres restant non conformes ou nécessitant une vérification manuelle font l'objet d'une analyse spécifique afin de distinguer les mesures pouvant encore être corrigées des limitations liées à l'environnement de laboratoire.
+
+\minihead{Analyse des paramètres restant non conformes}
+Malgré l'amélioration obtenue, quatre paramètres restent non conformes après l'application du durcissement. Leur analyse montre que ces écarts sont principalement liés aux contraintes de l'environnement de laboratoire virtualisé.
+
+Les contrôles relatifs à la sécurité basée sur la virtualisation (VBS) et à l'intégrité du code protégée par hyperviseur (HVCI) dépendent notamment des fonctionnalités de virtualisation matérielle, du démarrage sécurisé et de la configuration de l'hyperviseur utilisé pour la machine virtuelle Windows 11. De même, certains contrôles relatifs à BitLocker peuvent dépendre de la présence et de la configuration d'un TPM virtuel ainsi que de la configuration du stockage de la machine virtuelle.
+
+Ces limitations sont donc à interpréter dans le contexte de l'environnement de test utilisé. Elles ne remettent pas en cause les mesures de durcissement qui ont pu être appliquées et vérifiées sur le poste (tableau~\ref{tab:nc-win}).
+
+\begin{table}[htbp]
+\centering
+\caption{Analyse des principales non-conformités restantes}
+\label{tab:nc-win}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}p{4.8cm} L@{}}
+\toprule
+\hdrow \hd{Paramètre} & \hd{Justification} \\
+\midrule
+VBS & Dépend de la configuration de la virtualisation matérielle, du démarrage sécurisé et de l'hyperviseur utilisé. \\
+HVCI & Dépend notamment de VBS, de la compatibilité des pilotes et des mécanismes de sécurité disponibles dans l'environnement virtualisé. \\
+BitLocker -- récupération & La validation complète dépend de la disponibilité et de la configuration du TPM dans l'environnement de test. \\
+BitLocker -- protection & La mise en œuvre complète du chiffrement dépend de la configuration matérielle et du mécanisme TPM disponible. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Ainsi, les quatre non-conformités restantes sont principalement liées aux contraintes techniques de l'environnement de laboratoire et non à l'absence de mise en œuvre des mesures de sécurité applicables.
+
+\subsection{Nouvelle simulation d'attaque après durcissement}
+
+\Needspace{9\baselineskip}
+Afin de valider expérimentalement l'efficacité des mesures de durcissement, une seconde simulation d'attaque par force brute a été réalisée depuis la machine Kali Linux. Le même scénario que celui utilisé avant durcissement a été conservé afin de permettre une comparaison objective des résultats : le compte de test \texttt{audit} et la même liste de mots de passe ont été utilisés contre le service RDP du poste Windows 11. La commande exécutée depuis Kali Linux est la suivante :
+
+\begin{lstlisting}[language=bash]
+hydra -l audit -P passwords.txt -V rdp://192.168.100.136
+\end{lstlisting}
+
+\begin{figure}[htbp]
+\centering
+\fig{fig13.png}{0.85}{}
+\caption{Simulation de force brute RDP après durcissement}
+\label{fig:hydra-after}
+\end{figure}
+
+\Needspace{9\baselineskip}
+Contrairement à la simulation réalisée avant durcissement, aucune combinaison valide n'a été identifiée au cours de cette seconde tentative. Hydra indique :
+
+\begin{lstlisting}
+0 of 1 target completed, 0 valid password found
+\end{lstlisting}
+
+Le résultat indique donc qu'aucun des mots de passe présents dans la liste de test n'a permis d'obtenir une authentification valide sur le service RDP.
+
+La sortie de l'outil indique également plusieurs erreurs de connexion \emph{freerdp}, suivies de l'arrêt des tentatives parallèles après plusieurs erreurs. Ce comportement est cohérent avec les mécanismes de protection et de limitation des tentatives d'authentification mis en place lors du durcissement.
+
+Il convient néanmoins de distinguer l'absence de mot de passe valide dans cette simulation d'une impossibilité absolue de compromettre le service. Le test permet de confirmer que le scénario de force brute utilisé dans le laboratoire n'a pas permis d'obtenir une authentification valide après durcissement.
+
+\subsection{Comparaison avant et après durcissement}
+
+Afin de mesurer l'efficacité des actions réalisées, les résultats de l'audit initial ont été comparés à ceux obtenus après durcissement (tableau~\ref{tab:evol-win}).
+
+\begin{table}[htbp]
+\centering
+\caption{Évolution du niveau de conformité de Windows 11 après durcissement}
+\label{tab:evol-win}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}L r r@{}}
+\toprule
+\hdrow \hd{Indicateur} & \hd{Avant durcissement} & \hd{Après durcissement} \\
+\midrule
+Paramètres conformes & 10 & 26 \\
+Paramètres non conformes & 20 & 4 \\
+Paramètres à vérifier manuellement & 10 & 10 \\
+Taux de conformité & 25\,\% & 85\,\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le nombre de paramètres conformes est ainsi passé de 10 à 26, tandis que le nombre de paramètres non conformes a diminué de 20 à 4. Le taux global de conformité est passé de 25\,\% à 85\,\%. Cette évolution confirme l'efficacité globale des mesures de durcissement appliquées au poste Windows 11.
+
+\section{Durcissement du pare-feu FortiGate}
+
+Après l'étude et le durcissement du poste Windows 11, une démarche similaire a été appliquée au pare-feu FortiGate utilisé dans l'environnement de laboratoire. L'objectif est d'évaluer la configuration initiale du pare-feu, d'identifier les écarts de sécurité et de mettre en évidence les paramètres nécessitant une action corrective.
+
+\subsection{Environnement du FortiGate}
+
+Le pare-feu utilisé dans le cadre de cette étude est une machine virtuelle \emph{FortiGate-VM64}. La configuration analysée correspond à la version FortiOS v7.2.0, build 1157. L'adresse IP utilisée pour l'administration du pare-feu dans l'environnement de laboratoire est 192.168.1.2. L'audit a été réalisé à distance depuis l'environnement de test et porte sur les différents paramètres de configuration et de sécurité du FortiGate.
+
+\subsection{Audit initial}
+
+Un audit initial de la configuration du FortiGate a été réalisé avant l'application des mesures de durcissement. La grille d'évaluation utilisée comporte 56 contrôles de sécurité issus du référentiel retenu pour l'étude. Les résultats de l'audit initial sont les suivants :
+\begin{itemize}
+  \item 5 contrôles conformes ;
+  \item 10 contrôles non conformes ;
+  \item 40 contrôles partiellement conformes ;
+  \item 1 contrôle nécessitant une vérification ;
+  \item un taux de conformité global de 8,9\,\%.
+\end{itemize}
+
+Ces résultats montrent que la configuration initiale présente un niveau de conformité faible et plusieurs écarts nécessitant des mesures correctives. La figure~\ref{fig:forti-before} présente la synthèse du rapport généré avant l'application des mesures de durcissement.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig14.jpeg}{1}{}
+\caption{Rapport d'audit initial du FortiGate}
+\label{fig:forti-before}
+\end{figure}
+
+\minihead{Analyse des écarts identifiés}
+L'analyse des résultats de l'audit initial permet d'identifier plusieurs domaines présentant des écarts de sécurité. Les principales catégories concernées sont notamment :
+\Needspace{9\baselineskip}
+\begin{multicols}{2}
+\begin{itemize}
+  \item la gestion des comptes administrateurs ;
+  \item la politique de mots de passe ;
+  \item le contrôle des accès d'administration ;
+  \item les services d'administration exposés ;
+  \item la journalisation des événements ;
+  \item la configuration des mécanismes de protection réseau ;
+  \item les paramètres de sécurité des interfaces ;
+  \item les mécanismes de filtrage et de contrôle du trafic.
+\end{itemize}
+\end{multicols}
+Certains contrôles sont classés comme \textbf{non conformes}, tandis que d'autres sont considérés comme \textbf{partiellement conformes}. Cette distinction permet de prioriser les actions de durcissement (tableau~\ref{tab:forti-initial}).
+
+\begin{table}[htbp]
+\centering
+\caption{Synthèse de l'audit initial du FortiGate}
+\label{tab:forti-initial}
+\begin{tabularx}{0.6\textwidth}{@{}>{\bfseries}L r@{}}
+\toprule
+\hdrow \hd{État du contrôle} & \hd{Nombre} \\
+\midrule
+Conforme & 5 \\
+Non conforme & 10 \\
+Partiellement conforme & 40 \\
+À vérifier & 1 \\
+\midrule
+\textbf{Total} & \textbf{56} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Ainsi, l'audit initial constitue l'état de référence permettant de mesurer l'efficacité des mesures de durcissement appliquées dans la suite de l'étude.
+
+\subsection{Analyse de l'exposition réseau avant durcissement}
+
+En complément de l'audit de configuration, une reconnaissance réseau du FortiGate a été réalisée depuis la machine Kali Linux. Cette étape permet d'identifier les services accessibles depuis le réseau de test avant l'application des mesures de durcissement.
+
+\Needspace{9\baselineskip}
+Dans un premier temps, un contrôle du certificat TLS du service HTTPS a été effectué à l'aide du script NSE \texttt{ssl-cert} de Nmap :
+
+\begin{lstlisting}[language=bash]
+nmap --script ssl-cert -p 443 192.168.1.2
+\end{lstlisting}
+
+Le résultat confirme que l'hôte 192.168.1.2 est accessible et que le port TCP 443, correspondant au service HTTPS d'administration, est ouvert (figure~\ref{fig:forti-https}).
+
+\begin{figure}[htbp]
+\centering
+\fig{fig15.jpeg}{0.85}{}
+\caption{Identification du service HTTPS du FortiGate avant durcissement}
+\label{fig:forti-https}
+\end{figure}
+
+\Needspace{9\baselineskip}
+Une seconde reconnaissance plus complète a ensuite été réalisée avec Nmap à l'aide des options de détection de services et du système d'exploitation :
+
+\begin{lstlisting}[language=bash]
+sudo nmap -A 192.168.1.2
+\end{lstlisting}
+
+Cette analyse a permis d'identifier notamment les éléments suivants (figure~\ref{fig:forti-nmap}) :
+\begin{itemize}
+  \item \textbf{80/tcp} : service HTTP, identifié comme \texttt{tcpwrapped} ;
+  \item \textbf{443/tcp} : service HTTPS, également identifié comme \texttt{tcpwrapped} ;
+  \item le système cible est identifié comme un équipement Fortinet ;
+  \item Nmap estime la version du système comme appartenant à la famille FortiOS 6.2--7.2.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\fig{fig16.jpeg}{0.7}{}
+\caption{Reconnaissance des services du FortiGate avant durcissement}
+\label{fig:forti-nmap}
+\end{figure}
+
+Ces résultats permettent d'établir une première photographie de la surface réseau exposée du pare-feu avant durcissement. Ils servent de référence pour la comparaison avec les résultats obtenus après application des mesures de sécurité. Il convient toutefois de préciser que la détection d'un port ouvert par Nmap ne constitue pas à elle seule la preuve d'une vulnérabilité : elle permet principalement d'identifier les services accessibles et d'orienter les contrôles de sécurité et les actions de durcissement.
+
+\subsection{Mise en œuvre du durcissement du FortiGate}
+
+À la suite de l'audit initial du pare-feu FortiGate, une phase de durcissement a été mise en œuvre afin de corriger les écarts identifiés et de renforcer la sécurité de la configuration. La démarche adoptée combine des mesures automatisées à l'aide d'un script de durcissement et des mesures configurées ou vérifiées manuellement. Cette approche permet d'une part d'automatiser les paramètres pouvant être appliqués de manière reproductible et, d'autre part, de traiter manuellement les paramètres dépendant de l'architecture du laboratoire et des besoins d'administration.
+
+\minihead{Mesures automatisées}
+Une partie des mesures de sécurité a été appliquée à l'aide d'un script de durcissement exécuté sur le FortiGate. Le script permet également de contrôler l'état des différents paramètres et d'indiquer leur niveau de conformité. Les principales mesures automatisées concernent la configuration globale du pare-feu et la sécurisation des accès d'administration :
+\begin{itemize}
+  \item \textbf{personnalisation du nom d'hôte} : un nom d'hôte explicite a été défini afin de faciliter l'identification du pare-feu dans l'environnement de test ;
+  \item \textbf{renforcement de la politique de mots de passe} : une longueur minimale du mot de passe ainsi qu'une politique de renouvellement ont été configurées ;
+  \item \textbf{verrouillage du compte administrateur} : un mécanisme de verrouillage est configuré après plusieurs tentatives d'authentification échouées afin de limiter les attaques par force brute ;
+  \item \textbf{expiration des sessions d'administration} : une durée maximale d'inactivité est définie afin d'éviter qu'une session d'administration laissée ouverte reste accessible indéfiniment ;
+  \item \textbf{activation du chiffrement fort} : les mécanismes cryptographiques renforcés sont activés afin d'améliorer la sécurité des communications d'administration ;
+  \item \textbf{restriction des versions TLS} : l'interface d'administration Web est configurée afin d'utiliser des versions récentes de TLS ;
+  \item \textbf{activation des bannières de connexion} : des messages d'information et d'avertissement sont affichés lors de l'accès à l'interface d'administration ;
+  \item \textbf{personnalisation des paramètres d'administration} : les paramètres relatifs aux ports et aux services d'administration sont adaptés à l'environnement de test.
+\end{itemize}
+
+\Needspace{20\baselineskip}
+Un extrait représentatif du script utilisé est présenté ci-dessous. Il illustre notamment le renforcement de la politique d'authentification, le verrouillage des comptes, la limitation de la durée des sessions ainsi que le renforcement des communications d'administration.
+
+\begin{lstlisting}[numbers=left,numberstyle=\tiny\color{accent2},numbersep=6pt]
+config system global
+    set hostname "FW-LAB-01"
+    set timezone 40
+    set admin-password-expire 90
+    set admin-password-min-length 12
+    set admin-password-change enable
+    set admin-lockout-threshold 5
+    set admin-lockout-duration 900
+    set admin-session-timeout 600
+    set strong-crypto enable
+    set admin-https-ssl-versions tlsv1-2 tlsv1-3
+    set admin-https-pki-required enable
+    set pre-login-banner enable
+    set post-login-banner enable
+    set admin-port 8443
+    set admin-https-port 8443
+    set admin-ssh-port 22
+end
+\end{lstlisting}
+
+\minihead{Mesures configurées manuellement}
+Certains paramètres nécessitant une adaptation à l'environnement du laboratoire ont été configurés ou vérifiés manuellement. Ces interventions complètent les mesures appliquées automatiquement par le script. Les principales mesures manuelles réalisées sont les suivantes :
+\begin{itemize}
+  \item \textbf{modification du mot de passe administrateur} : le mot de passe du compte administrateur a été modifié afin de remplacer le mot de passe initial par un mot de passe plus robuste ;
+  \item \textbf{restriction des hôtes de confiance} : les adresses IP autorisées à administrer le FortiGate ont été restreintes afin de limiter l'accès aux fonctions d'administration aux sources autorisées ;
+  \item \textbf{restriction de l'accès SSH} : l'accès d'administration à distance via SSH a été limité afin de réduire la surface d'exposition du service d'administration ;
+  \item \textbf{sécurisation de l'accès HTTPS} : l'accès à l'interface graphique d'administration a été configuré via HTTPS afin de protéger les échanges d'administration ;
+  \item \textbf{configuration de la journalisation} : les paramètres de journalisation ont été vérifiés et configurés afin d'assurer la traçabilité des événements et des tentatives d'accès ;
+  \item \textbf{synchronisation temporelle} : la configuration du service NTP a été vérifiée afin de garantir une référence temporelle cohérente pour les journaux et les événements de sécurité ;
+  \item \textbf{vérification des services d'administration} : les services accessibles sur les interfaces du FortiGate ont été vérifiés afin de limiter l'exposition aux services nécessaires.
+\end{itemize}
+Ces mesures manuelles ont été réalisées en tenant compte de l'architecture réseau virtuelle utilisée pour le laboratoire. Leur configuration permet de conserver les accès nécessaires aux opérations d'administration tout en réduisant les possibilités d'accès non autorisés.
+
+\subsection{Audit après durcissement du FortiGate}
+
+À l'issue de la phase de durcissement, une seconde évaluation de la configuration du FortiGate a été réalisée à l'aide de la même checklist de conformité composée de 56 contrôles. L'utilisation de la même grille permet de comparer de manière homogène l'état initial et l'état final du pare-feu.
+
+L'audit de vérification réalisé après l'application des mesures de sécurité montre une amélioration significative du niveau de conformité. Le FortiGate atteint un taux de conformité global de \textbf{80,4\,\%}, avec \textbf{45 contrôles conformes sur 56}. Les résultats obtenus sont répartis comme suit :
+\begin{itemize}
+  \item \textbf{45 contrôles conformes}, soit 80,4\,\% des contrôles évalués ;
+  \item \textbf{2 contrôles non conformes}, nécessitant encore une action corrective ;
+  \item \textbf{7 contrôles partiellement conformes}, pour lesquels certains éléments de la recommandation sont appliqués mais nécessitent encore une amélioration ;
+  \item \textbf{2 contrôles non applicables} dans le contexte de l'environnement de laboratoire ;
+  \item \textbf{0 contrôle à vérifier}, indiquant que l'ensemble des contrôles évalués a pu être traité lors de cette phase.
+\end{itemize}
+
+La figure~\ref{fig:forti-after} présente le rapport généré après l'application des mesures de durcissement. Elle met en évidence l'évolution du niveau de conformité du pare-feu et permet d'identifier les contrôles nécessitant encore des améliorations.
+
+\begin{figure}[htbp]
+\centering
+\fig{fig17.jpeg}{1}{}
+\caption{Rapport d'audit de conformité du FortiGate après durcissement}
+\label{fig:forti-after}
+\end{figure}
+
+\subsection{Justification des contrôles non conformes}
+
+Après le durcissement, deux contrôles restent non conformes (tableau~\ref{tab:nc-forti}). Ces écarts sont principalement liés aux contraintes de l'environnement de laboratoire.
+
+\begin{table}[htbp]
+\centering
+\caption{Justification des contrôles non conformes}
+\label{tab:nc-forti}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}p{3.8cm} p{2.8cm} L@{}}
+\toprule
+\hdrow \hd{Contrôle} & \hd{État} & \hd{Justification} \\
+\midrule
+Configuration HA activée & Non conforme & Le contrôle n'est pas applicable dans le laboratoire, car l'environnement utilise une seule appliance FortiGate. La haute disponibilité nécessite plusieurs équipements pour assurer la redondance. \\
+Dernier firmware installé & Non conforme & La mise à jour du firmware n'a pas été réalisée dans l'environnement de test, car une modification de version peut présenter un risque pour la stabilité et le fonctionnement de la plateforme de laboratoire. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Ces deux écarts sont donc liés aux contraintes spécifiques de l'environnement expérimental. Le premier résulte de l'utilisation d'une seule appliance, tandis que le second est lié à la gestion du firmware dans une plateforme de test. Les autres mesures de durcissement ont pu être appliquées et vérifiées dans l'environnement mis en place.
+
+\subsection{Comparaison avant et après durcissement}
+
+Afin de mesurer l'efficacité des mesures de durcissement appliquées au FortiGate, les résultats de l'audit initial ont été comparés à ceux obtenus après leur mise en œuvre (tableau~\ref{tab:evol-forti}).
+
+\begin{table}[htbp]
+\centering
+\caption{Évolution du niveau de conformité du FortiGate avant et après durcissement}
+\label{tab:evol-forti}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}L r r@{}}
+\toprule
+\hdrow \hd{Indicateur} & \hd{Avant durcissement} & \hd{Après durcissement} \\
+\midrule
+Contrôles conformes & 5 & 45 \\
+Contrôles non conformes & 10 & 2 \\
+Contrôles partiellement conformes & 40 & 7 \\
+Contrôles à vérifier & 1 & 0 \\
+Contrôles non applicables & 0 & 2 \\
+Taux de conformité & 8,9\,\% & 80,4\,\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le nombre de contrôles conformes est passé de \textbf{5 à 45}, tandis que les contrôles non conformes ont diminué de \textbf{10 à 2}. Les contrôles partiellement conformes sont également passés de \textbf{40 à 7}. Le taux global de conformité est ainsi passé de \textbf{8,9\,\% à 80,4\,\%}, soit une amélioration de \textbf{71,5 points de pourcentage}. Cette évolution met en évidence l'efficacité globale des mesures de durcissement appliquées au FortiGate et l'amélioration significative de son niveau de sécurité.
+
+\section{Conclusion}
+
+Ce chapitre a présenté les mesures de durcissement et leur validation sur Windows 11 et FortiGate. Les résultats montrent une amélioration significative du niveau de conformité, passant de 25\,\% à 85\,\% pour Windows 11 et de 8,9\,\% à 80,4\,\% pour FortiGate. Les audits et simulations réalisés avant et après durcissement ont permis de vérifier l'efficacité des mesures appliquées et d'identifier les écarts résiduels liés principalement aux contraintes du laboratoire.

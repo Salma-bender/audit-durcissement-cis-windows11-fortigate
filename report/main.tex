@@ -1,0 +1,162 @@
+% !TEX program = xelatex
+\documentclass[11pt,a4paper,oneside]{report}
+
+% ---------- Langue et polices ----------
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{french}
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}[Scale=MatchLowercase]
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
+
+% ---------- Mise en page ----------
+\usepackage[a4paper,margin=2.5cm,headheight=15pt]{geometry}
+\usepackage{microtype}
+\usepackage[table]{xcolor}
+\usepackage{graphicx,float,booktabs,tabularx,array,longtable,multicol,enumitem,caption,fancyhdr,titlesec,listings,tcolorbox}
+\usepackage{etoolbox}
+\usepackage{needspace}
+
+\definecolor{accent}{HTML}{1F3A5F}
+\definecolor{accent2}{HTML}{2E6DA4}
+\definecolor{softgray}{HTML}{F2F5F9}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\linespread{1.08}
+\setlist{nosep,topsep=0.3em,itemsep=0.15em,leftmargin=1.6em}
+\setlist[itemize]{label=\textcolor{accent2}{\textbullet}}
+\sloppy
+
+% ---------- Titres ----------
+\titleformat{\chapter}[display]
+  {\normalfont\sffamily\bfseries\color{accent}}
+  {\Large\chaptertitlename\ \thechapter}{8pt}{\Huge}[\vspace{3pt}\titlerule]
+\titlespacing*{\chapter}{0pt}{-15pt}{26pt}
+\titleformat{\section}{\normalfont\sffamily\Large\bfseries\color{accent}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\normalfont\sffamily\large\bfseries\color{accent2}}{\thesubsection}{0.8em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.6em}
+\titlespacing*{\subsection}{0pt}{1.2em}{0.4em}
+
+\newcommand{\minihead}[1]{\par\medskip\noindent{\sffamily\bfseries\color{accent2}#1}\par\nobreak\smallskip}
+
+% ---------- En-têtes ----------
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily\color{accent}\nouppercase{\leftmark}}
+\fancyhead[R]{\small\sffamily\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\sffamily\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% ---------- Légendes ----------
+\gappto\captionsfrench{\renewcommand{\tablename}{Tableau}\renewcommand{\figurename}{Figure}}
+\captionsetup{font=small,labelfont={bf,color=accent},labelsep=endash,skip=6pt}
+\captionsetup[table]{position=above}
+\captionsetup[figure]{position=below}
+
+% ---------- Tableaux ----------
+\renewcommand{\arraystretch}{1.25}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\hd}[1]{\textcolor{white}{\sffamily\bfseries #1}}
+\newcommand{\hdrow}{\rowcolor{accent}}
+
+% ---------- Code ----------
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{softgray},
+  frame=single,
+  rulecolor=\color{accent2!40},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  xleftmargin=0.4em,
+  xrightmargin=0.4em,
+  aboveskip=0.8em,
+  belowskip=0.6em
+}
+
+% ---------- Liens ----------
+\usepackage[colorlinks=true,linkcolor=accent,urlcolor=accent2,citecolor=accent2,
+  bookmarksnumbered,pdftitle={Audit de configuration de sécurité et durcissement des actifs SI dans une démarche de conformité CIS},
+  pdfauthor={Salma Bender}]{hyperref}
+
+% ---------- Utilitaires ----------
+\let\oldsection\section
+\renewcommand{\section}{\Needspace{7\baselineskip}\oldsection}
+\let\oldsubsection\subsection
+\renewcommand{\subsection}{\Needspace{5\baselineskip}\oldsubsection}
+\newcommand{\og}{«\nobreak\hspace{0.22em}\ignorespaces}
+\newcommand{\fg}{\unskip\nobreak\hspace{0.22em}»}
+\newcommand{\unnumberedchapter}[1]{%
+  \clearpage\phantomsection
+  \chapter*{#1}%
+  \addcontentsline{toc}{chapter}{#1}%
+  \markboth{#1}{}}
+\newcommand{\fig}[3]{% fichier, largeur, légende+label gérés à l'extérieur
+  \includegraphics[width=#2\textwidth,height=0.82\textheight,keepaspectratio]{figures/#1}}
+
+\begin{document}
+
+% ================= PAGE DE TITRE =================
+\begin{titlepage}
+\centering
+\vspace*{3.2cm}
+{\sffamily\large\color{accent2}\textsc{Projet personnel de cybersécurité}\par}
+\vspace{1.2cm}
+{\color{accent}\rule{0.7\textwidth}{1.2pt}\par}
+\vspace{0.9cm}
+{\sffamily\bfseries\huge\color{accent}Audit de configuration de sécurité et durcissement des actifs SI dans une démarche de conformité CIS\par}
+\vspace{0.9cm}
+{\color{accent}\rule{0.7\textwidth}{1.2pt}\par}
+\vspace{1.4cm}
+{\sffamily\large Windows 11 · FortiGate · CIS Benchmarks\par}
+\vfill
+{\large Réalisé par\par}
+\vspace{0.2cm}
+{\sffamily\Large\bfseries Salma Bender\par}
+\vspace{1.2cm}
+{\large 2026\par}
+\end{titlepage}
+
+% ================= PRÉLIMINAIRES =================
+\pagenumbering{roman}
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+\clearpage\phantomsection
+\renewcommand{\listfigurename}{Liste des figures}
+\addcontentsline{toc}{chapter}{Liste des figures}
+\listoffigures
+
+\clearpage\phantomsection
+\addcontentsline{toc}{chapter}{Liste des tableaux}
+\listoftables
+
+\input{abbreviations}
+
+% ================= CORPS =================
+\clearpage
+\pagenumbering{arabic}
+\input{chap1}
+\input{chap2}
+\input{chap3}
+\input{conclusion}
+
+% ================= BIBLIOGRAPHIE =================
+\clearpage\phantomsection
+\addcontentsline{toc}{chapter}{Bibliographie}
+\renewcommand{\bibname}{Bibliographie}
+\begin{thebibliography}{9}
+\setlength{\itemsep}{0.6em}
+\bibitem{cis-win} Center for Internet Security (CIS), \emph{CIS Benchmark for Microsoft Windows 11}. Disponible sur : \url{https://downloads.cisecurity.org/}
+\bibitem{cis-forti} Center for Internet Security (CIS), \emph{CIS Benchmark for FortiGate/FortiOS}. Disponible sur : \url{https://downloads.cisecurity.org/}
+\bibitem{dnssi} Direction Générale de la Sécurité des Systèmes d'Information (DGSSI), \emph{Directive Nationale de Sécurité des Systèmes d'Information (DNSSI)}. Disponible sur : \url{https://www.dgssi.gov.ma/}
+\bibitem{loi} Royaume du Maroc, \emph{Loi n°05-20 relative à la cybersécurité}. Disponible sur : \url{https://www.dgssi.gov.ma/fr/}
+\bibitem{fortinet} Fortinet, \emph{Documentation FortiOS}. Disponible sur : \url{https://docs.fortinet.com/}
+\bibitem{microsoft} Microsoft, \emph{Documentation de sécurité Windows}. Disponible sur : \url{https://www.microsoft.com/fr-fr/software-download/windows11}
+\bibitem{techtarget} TechTarget, \emph{What is a Security Audit? – Definition, Types and Best Practices}. Disponible sur : \url{https://www.techtarget.com/searchcio/definition/security-audit}
+\end{thebibliography}
+
+\end{document}

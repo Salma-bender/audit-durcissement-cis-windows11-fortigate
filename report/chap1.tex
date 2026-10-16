@@ -1,0 +1,80 @@
+\chapter{Contexte et problématique}
+\label{chap:contexte}
+
+\section{Contexte}
+
+Face à l'évolution constante des cybermenaces, les établissements bancaires sont confrontés à des défis majeurs en matière de protection de leurs systèmes d'information. Les actifs du système d'information d'un établissement bancaire constituent des éléments critiques qui doivent être configurés conformément aux bonnes pratiques de sécurité afin de limiter les risques d'exploitation des vulnérabilités.
+
+\section{Les différents types d'audit de sécurité}
+
+L'audit de sécurité des systèmes d'information est une démarche méthodique visant à évaluer le niveau de protection des actifs informatiques d'une organisation. Il permet d'identifier les risques, de détecter les vulnérabilités de sécurité et de vérifier l'efficacité des mesures de protection mises en œuvre. Selon les objectifs recherchés, plusieurs types d'audits peuvent être distingués :
+
+\begin{itemize}
+  \item \textbf{Audit organisationnel} : il porte sur la gouvernance de la sécurité, les politiques, les procédures et les responsabilités afin d'évaluer l'organisation de la sécurité des systèmes d'information ;
+  \item \textbf{Audit technique} : il consiste à examiner les configurations des systèmes d'exploitation, des équipements réseau, des applications et des dispositifs de sécurité afin d'identifier les faiblesses techniques ;
+  \item \textbf{Audit de vulnérabilités} : il utilise des outils spécialisés pour détecter automatiquement les vulnérabilités connues susceptibles d'affecter les actifs du système d'information ;
+  \item \textbf{Test d'intrusion (pentest)} : il simule des scénarios d'attaque réels afin d'évaluer la capacité des systèmes à résister à une tentative d'exploitation ;
+  \item \textbf{Audit de configuration} : il vérifie que les paramètres de configuration des systèmes et des équipements sont conformes aux bonnes pratiques de sécurité et aux recommandations des référentiels applicables ;
+  \item \textbf{Audit de conformité} : il consiste à évaluer le respect des exigences définies par les lois, réglementations, normes et référentiels de sécurité adoptés par l'organisation.
+\end{itemize}
+
+Ces différentes formes d'audit sont complémentaires et permettent d'obtenir une vision globale du niveau de sécurité du système d'information.
+
+\section{Audit de configuration et audit de conformité}
+
+Le présent projet s'inscrit dans une démarche d'audit de configuration et d'audit de conformité.
+
+L'audit de configuration consiste à analyser les paramètres de sécurité des actifs afin de vérifier qu'ils sont configurés conformément aux recommandations des référentiels de sécurité. Il permet d'identifier les erreurs de configuration susceptibles d'introduire des vulnérabilités ou d'affaiblir le niveau de protection du système.
+
+L'audit de conformité vise quant à lui à vérifier que les configurations mises en œuvre respectent les exigences des référentiels retenus, notamment la loi n°05-20, les recommandations de la DGSSI, les exigences de la DNSSI ainsi que les CIS Benchmarks.
+
+Dans le cadre de ce projet, ces deux approches sont complémentaires. L'audit de configuration permet d'identifier les paramètres à corriger, tandis que l'audit de conformité mesure le niveau de respect des exigences de sécurité définies par les différents référentiels.
+
+\section{Problématique}
+
+Face à l'évolution constante des cybermenaces, les organisations doivent veiller à ce que leurs actifs informatiques soient configurés conformément aux exigences de sécurité et aux bonnes pratiques afin de limiter les risques de compromission.
+
+L'évaluation préliminaire des actifs étudiés a mis en évidence un niveau de maturité \og Reproductible \fg{} (tableau~\ref{tab:maturite}), caractérisé par des pratiques de sécurité appliquées de manière partielle. Dans ce contexte, ce projet vise à améliorer le niveau de sécurité des actifs Windows 11 et FortiGate en mettant en œuvre des mesures de durcissement conformes à la loi n°05-20, aux recommandations de la DGSSI, à la DNSSI et aux CIS Benchmarks, afin de faire évoluer leur niveau de maturité vers le niveau \og Défini \fg{}.
+
+\begin{table}[htbp]
+\centering
+\caption{Niveaux de maturité de la mise en œuvre des contrôles de sécurité}
+\label{tab:maturite}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}l L@{}}
+\toprule
+\hdrow \hd{Niveau} & \hd{Description} \\
+\midrule
+Aucun & Aucune mesure de sécurité n'est mise en œuvre. \\
+Initial & Des actions ponctuelles sont réalisées de manière non structurée. \\
+Reproductible & Les actions sont formalisées mais leur exécution reste manuelle. \\
+Défini & Les processus sont standardisés et documentés. \\
+Maîtrise & Les processus sont mesurés et contrôlés de manière proactive. \\
+Optimisé & Les processus font l'objet d'une amélioration continue. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Ainsi, la problématique de ce projet peut être formulée comme suit :
+
+\begin{tcolorbox}[colback=softgray,colframe=accent,boxrule=0.6pt,arc=2pt]
+Comment renforcer le niveau de sécurité des actifs étudiés afin de faire évoluer leur niveau de maturité de \og Reproductible \fg{} vers \og Défini \fg{}, conformément aux exigences de la loi n°05-20, de la DGSSI, de la DNSSI et des CIS Benchmarks ?
+\end{tcolorbox}
+
+\section{Objectifs}
+
+L'objectif principal de ce projet est de réaliser un audit de configuration et un audit de conformité de deux actifs critiques du système d'information, à savoir le poste de travail Windows 11 et le pare-feu FortiGate, puis de mettre en œuvre les mesures de durcissement nécessaires afin de renforcer leur niveau de sécurité.
+
+Pour atteindre cet objectif, le projet consiste à :
+
+\begin{itemize}
+  \item étudier les référentiels de sécurité applicables, notamment la loi n°05-20, les recommandations de la DGSSI, la DNSSI et les CIS Benchmarks ;
+  \item élaborer des guides d'audit et des checklists de conformité ;
+  \item réaliser un audit initial des configurations afin d'identifier les écarts de sécurité ;
+  \item appliquer les mesures de durcissement recommandées ;
+  \item automatiser certaines opérations à l'aide de scripts ;
+  \item effectuer un audit final permettant d'évaluer l'efficacité des actions mises en œuvre et l'amélioration du niveau de maturité des actifs étudiés.
+\end{itemize}
+
+\section{Organisation du document}
+
+Ce document est organisé en trois chapitres. Le présent chapitre pose le contexte, la problématique et les objectifs. Le chapitre~\ref{chap:guides} présente les actifs étudiés, les référentiels de sécurité retenus ainsi que l'élaboration des guides et des checklists d'audit. Le chapitre~\ref{chap:durcissement} détaille la mise en œuvre du durcissement de Windows 11 et du pare-feu FortiGate, ainsi que la validation des résultats. Une conclusion générale et des perspectives terminent le document.
